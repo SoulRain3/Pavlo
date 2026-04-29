@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Clicker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 350px;
+        }
+        h1 { color: #1a73e8; }
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        .click-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 1.5rem;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+        }
+        .click-btn:active { transform: scale(0.95); }
+        .click-btn:hover { background-color: #1557b0; }
+
+        .upgrades {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        button.buy-btn {
+            background: #34a853;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button.buy-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stats {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>Clicker Game</h1>
+    <div class="score-display" id="score">0</div>
+    <button class="click-btn" id="clicker">CLICK!</button>
+    
+    <div class="stats">
+        Punkty na sekundę: <span id="pps">0</span><br>
+        Ostatnia sesja: <span id="last-seen">Brak</span>
+    </div>
+
+    <div class="upgrades">
+        <div class="upgrade-item">
+            <div>
+                <strong>Siła kliknięcia</strong><br>
+                <small>Poziom: <span id="click-lvl">1</span> (Koszt: <span id="click-cost">10</span>)</small>
+            </div>
+            <button class="buy-btn" id="buy-click">Kup</button>
+        </div>
+
+        <div class="upgrade-item">
+            <div>
+                <strong>Auto-klik</strong><br>
+                <small>Poziom: <span id="auto-lvl">0</span> (Koszt: <span id="auto-cost">50</span>)</small>
+            </div>
+            <button class="buy-btn" id="buy-auto">Kup</button>
+        </div>
+    </div>
+    
+    <button onclick="resetGame()" style="margin-top: 20px; background: none; border: none; color: red; cursor: pointer; font-size: 0.8rem;">Zresetuj postęp</button>
+</div>
+
+<script>
+    
+    let gameState = {
+        points: 0,
+        clickPower: 1,
+        autoClickLevel: 0,
+        clickUpgradeCost: 10,
+        autoUpgradeCost: 50,
+        lastTimestamp: Date.now()
+    };
+
+    
+    const scoreEl = document.getElementById('score');
+    const clickLvlEl = document.getElementById('click-lvl');
+    const clickCostEl = document.getElementById('click-cost');
+    const autoLvlEl = document.getElementById('auto-lvl');
+    const autoCostEl = document.getElementById('auto-cost');
+    const ppsEl = document.getElementById('pps');
+
+    
+    function saveGame() {
+        gameState.lastTimestamp = Date.now();
+        localStorage.setItem('clickerSave', JSON.stringify(gameState));
+    }
+
+    
+    function loadGame() {
+        const savedData = localStorage.getItem('clickerSave');
+        if (savedData) {
+            const loadedState = JSON.parse(savedData);
+            
+            
+            const now = Date.now();
+            const diffSeconds = Math.floor((now - loadedState.lastTimestamp) / 1000);
+            
+            if (diffSeconds > 0 && loadedState.autoClickLevel > 0) {
+                const offlinePoints = diffSeconds * loadedState.autoClickLevel;
+                loadedState.points += offlinePoints;
+                alert(`Witaj z powrotem! Zarobiłeś ${offlinePoints} punktów podczas Twojej nieobecności (${diffSeconds}s).`);
+            }
+
+            gameState = loadedState;
+            updateUI();
+        }
+    }
+
+   
+    function updateUI() {
+        scoreEl.innerText = Math.floor(gameState.points);
+        clickLvlEl.innerText = gameState.clickPower;
+        clickCostEl.innerText = gameState.clickUpgradeCost;
+        autoLvlEl.innerText = gameState.autoClickLevel;
+        autoCostEl.innerText = gameState.autoUpgradeCost;
+        ppsEl.innerText = gameState.autoClickLevel;
+
+      
+        document.getElementById('buy-click').disabled = gameState.points < gameState.clickUpgradeCost;
+        document.getElementById('buy-auto').disabled = gameState.points < gameState.autoUpgradeCost;
+    }
+
+    
+    document.getElementById('clicker').addEventListener('click', () => {
+        gameState.points += gameState.clickPower;
+        updateUI();
+        saveGame();
+    });
+
+    
+    document.getElementById('buy-click').addEventListener('click', () => {
+        if (gameState.points >= gameState.clickUpgradeCost) {
+            gameState.points -= gameState.clickUpgradeCost;
+            gameState.clickPower++;
+            gameState.clickUpgradeCost = Math.round(gameState.clickUpgradeCost * 1.5);
+            updateUI();
+            saveGame();
+        }
+    });
+
+    
+    document.getElementById('buy-auto').addEventListener('click', () => {
+        if (gameState.points >= gameState.autoUpgradeCost) {
+            gameState.points -= gameState.autoUpgradeCost;
+            gameState.autoClickLevel++;
+            gameState.autoUpgradeCost = Math.round(gameState.autoUpgradeCost * 1.8);
+            updateUI();
+            saveGame();
+        }
+    });
+
+    setInterval(() => {
+        if (gameState.autoClickLevel > 0) {
+            gameState.points += gameState.autoClickLevel;
+            updateUI();
+            saveGame(); 
+        }
+    }, 1000);
+
+    function resetGame() {
+        if(confirm("Czy na pewno chcesz zresetować grę?")) {
+
+            localStorage.removeItem('clickerSave');
+            
+            gameState = {
+                points: 0,
+                clickPower: 1,
+                autoClickLevel: 0,
+                clickUpgradeCost: 10,
+                autoUpgradeCost: 50,
+                lastTimestamp: Date.now()
+            };
+
+            location.reload();
+        }
+    }
+
+    loadGame();
+    updateUI();
+</script>
+
+</body>
+</html>
