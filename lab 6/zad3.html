@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Zadanie 3</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Aktualny czas:</h1>
+    <div id="time-display">Загрузка...</div>
+
+    <script>
+      async function fetchTime() {
+        try {
+          const response = await fetch(
+            "https://timeapi.io/api/Time/current/zone?timeZone=Europe/Warsaw",
+          );
+          const data = await response.json();
+
+          document.getElementById("time-display").innerText = data.time;
+        } catch (error) {
+          document.getElementById("time-display").innerText = "Ошибка сети";
+        }
+      }
+
+      fetchTime();
+    </script>
+  </body>
+</html>

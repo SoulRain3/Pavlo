@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      #reset {
+        display: inline-block;
+      }
+      #stop {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="czas">
+      <span id="godziny">00</span>:<span id="minuty">00</span>:<span
+        id="sekundy"
+        >00</span
+      >
+    </h1>
+    <button id="start">START</button>
+    <button id="zapisz">ZAPISZ</button>
+    <button id="stop">STOP</button>
+    <button id="reset">RESET</button>
+    <p id="stan_stopera"></p>
+    <ul id="zapisane_czasy"></ul>
+
+    <script>
+      let interval;
+      let s = 0,
+        m = 0,
+        g = 0;
+
+      const display = {
+        s: document.getElementById("sekundy"),
+        m: document.getElementById("minuty"),
+        g: document.getElementById("godziny"),
+        status: document.getElementById("stan_stopera"),
+        list: document.getElementById("zapisane_czasy"),
+      };
+
+      const buttons = {
+        start: document.getElementById("start"),
+        stop: document.getElementById("stop"),
+        reset: document.getElementById("reset"),
+        zapisz: document.getElementById("zapisz"),
+      };
+
+      function format(num) {
+        return num < 10 ? "0" + num : num;
+      }
+
+      buttons.start.onclick = () => {
+        buttons.start.style.display = "none";
+        buttons.stop.style.display = "inline-block";
+        buttons.reset.style.display = "none";
+        display.status.innerText = "Odliczanie...";
+
+        interval = setInterval(() => {
+          s++;
+          if (s === 60) {
+            s = 0;
+            m++;
+          }
+          if (m === 60) {
+            m = 0;
+            g++;
+          }
+          display.s.innerText = format(s);
+          display.m.innerText = format(m);
+          display.g.innerText = format(g);
+        }, 1000);
+      };
+
+      buttons.stop.onclick = () => {
+        clearInterval(interval);
+        buttons.start.style.display = "inline-block";
+        buttons.stop.style.display = "none";
+        buttons.reset.style.display = "inline-block";
+        display.status.innerText = "Wstrzymano";
+      };
+
+      buttons.zapisz.onclick = () => {
+        const li = document.createElement("li");
+        li.innerText = `${format(g)}:${format(m)}:${format(s)}`;
+        display.list.appendChild(li);
+      };
+
+      buttons.reset.onclick = () => {
+        s = 0;
+        m = 0;
+        g = 0;
+        display.s.innerText = "00";
+        display.m.innerText = "00";
+        display.g.innerText = "00";
+        display.list.innerHTML = "";
+        display.status.innerText = "";
+      };
+    </script>
+  </body>
+</html>
